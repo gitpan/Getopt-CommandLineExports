@@ -3,7 +3,6 @@ package Getopt::CommandLineExports;
 use 5.006;
 use strict;
 use warnings;
-use feature qw(say);
 use CGI;
 
 
@@ -13,11 +12,11 @@ Getopt::CommandLineExports - Allow suroutines within a script to export comand l
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -29,71 +28,71 @@ Example Code:
     use Getopt::CommandLineExports qw(&regAC &parseArgsByPosition &parseArgs
         &checkArgs $scriptName @exportedSubs %cmdLines);
 
-$scriptName = qq[TestCommandLineExports];
-%cmdLines = (
-    twoScalars          => [qw/ ONE=s TWO=s /],
-    oneHash         => [qw/ ONE=s% /],
-    oneList         => [qw/ ONE=s@ /],
-);
-sub twoScalars
-{
-    my %h = (
-        ONE => undef,
-        TWO => undef,
-        ( parseArgs \@_, @{$cmdLines{twoScalars}}),
+    $scriptName = qq[TestCommandLineExports];
+    %cmdLines = (
+        twoScalars          => [qw/ ONE=s TWO=s /],
+        oneHash         => [qw/ ONE=s% /],
+        oneList         => [qw/ ONE=s@ /],
     );
-    print "twoScalars missing required argument:\n"
-        . join( "\n", checkArgs \%h ) . "\n"
-        if ( checkArgs \%h );
-    return " $h{ONE} , $h{TWO} \n";
-}
-
-sub oneHash
-{
-    my %h = (
-        ONE => undef,
-        ( parseArgs \@_, @{$cmdLines{oneHash}}),
-    );
-    print "oneHash missing required argument:\n"
-        . join( "\n", checkArgs \%h ) . "\n"
-        if ( checkArgs \%h );
-    print "oneHash\n";
-    print join("\n", (%{$h{ONE}}));
-}
-
-sub oneList
-{
-    my %h = (
-        ONE => undef,
-        ( parseArgs \@_, @{$cmdLines{oneList}}),
-    );
-    print "oneList missing required argument:\n"
-        . join( "\n", checkArgs \%h ) . "\n"
-        if ( checkArgs \%h );
-    print "oneList\n";
-    print join("\n",@{$h{ONE}});
-}
-
-# The "Main" subroutine. Not included in package, must be added manually to a script
-
-if ( defined $ARGV[0] )
-{
-    if ( defined( &{ $ARGV[0] } ) )
+    sub twoScalars
     {
-        no strict 'refs';
-        my $subRef = shift @ARGV;
-        print join( "\n", &$subRef(@ARGV) ) . "\n" unless $subRef =~ /regAC/ ;
-        &$subRef($scriptName, \@exportedSubs, \%cmdLines) if $subRef =~ /regAC/ ;
-        exit 0;
+        my %h = (
+            ONE => undef,
+            TWO => undef,
+            ( parseArgs \@_, @{$cmdLines{twoScalars}}),
+        );
+        print "twoScalars missing required argument:\n"
+            . join( "\n", checkArgs \%h ) . "\n"
+            if ( checkArgs \%h );
+        return " $h{ONE} , $h{TWO} \n";
     }
-}
 
-# some unit test examples:
-twoScalars "Hello1", "Hello2";
-twoScalars {ONE => "Hello1", TWO => "Hello2"};
-twoScalars "--ONE Hello1 --TWO Hello2";
-twoScalars "--ONE", "Hello1", "--TWO", "Hello2";
-twoScalars "--ONE", "Hello1", "--TWO", "Hello2", "--THREE", "Hello3"; # complains about "unknown option: three"
+    sub oneHash
+    {
+        my %h = (
+            ONE => undef,
+            ( parseArgs \@_, @{$cmdLines{oneHash}}),
+        );
+        print "oneHash missing required argument:\n"
+            . join( "\n", checkArgs \%h ) . "\n"
+            if ( checkArgs \%h );
+        print "oneHash\n";
+        print join("\n", (%{$h{ONE}}));
+    }
+
+    sub oneList
+    {
+        my %h = (
+            ONE => undef,
+            ( parseArgs \@_, @{$cmdLines{oneList}}),
+        );
+        print "oneList missing required argument:\n"
+            . join( "\n", checkArgs \%h ) . "\n"
+            if ( checkArgs \%h );
+        print "oneList\n";
+        print join("\n",@{$h{ONE}});
+    }
+
+    # The "Main" subroutine. Not included in package, must be added manually to a script
+
+    if ( defined $ARGV[0] )
+    {
+        if ( defined( &{ $ARGV[0] } ) )
+        {
+            no strict 'refs';
+            my $subRef = shift @ARGV;
+            print join( "\n", &$subRef(@ARGV) ) . "\n" unless $subRef =~ /regAC/ ;
+            &$subRef($scriptName, \@exportedSubs, \%cmdLines) if $subRef =~ /regAC/ ;
+            exit 0;
+        }
+    }
+
+    # some unit test examples:
+    twoScalars "Hello1", "Hello2";
+    twoScalars {ONE => "Hello1", TWO => "Hello2"};
+    twoScalars "--ONE Hello1 --TWO Hello2";
+    twoScalars "--ONE", "Hello1", "--TWO", "Hello2";
+    twoScalars "--ONE", "Hello1", "--TWO", "Hello2", "--THREE", "Hello3"; # complains about "unknown option: three"
 
 =head1 PURPOSE
 
@@ -103,14 +102,20 @@ script export many subcommands in a consistant manner.
 In the example above, the script is named "TestCommandLineExports".
 On a bash style command line, the following commands would work:
 
-TestCommandLineExports twoScalars --ONE "Arg1" --TWO "Arg2"
+    TestCommandLineExports twoScalars --ONE "Arg1" --TWO "Arg2"
 
 and would print:
- Arg1, Arg2
 
-TestCommandLineExports twoScalars --TWO "Arg2"
-twoScalars missing required argument:
---ONE
+    Arg1, Arg2
+
+while 
+
+    TestCommandLineExports twoScalars --TWO "Arg2"
+    
+would print:
+
+    twoScalars missing required argument:
+    --ONE
 
 TestCommandLineExports twoScalars may also be called through a CGI interface as well.
 
@@ -136,62 +141,62 @@ Returns a script roughly sutiable for the bash_autocompletion functions:
 
 Include roughly the following in your script:
 
-# this hash uses perl's Getopt::Long format 
-my %cmdLines = (
-    regAC => [qw//],
-    SubCommandOne => [qw/DIRECTORY=s YES_OR_NO=s ANY_FILE=s/],
-    SubCommandTwo => {qw/INT=i/],
-)
-my @exportedSubs = keys %cmdLines;
+    # this hash uses perl's Getopt::Long format 
+    my %cmdLines = (
+        regAC => [qw//],
+        SubCommandOne => [qw/DIRECTORY=s YES_OR_NO=s ANY_FILE=s/],
+        SubCommandTwo => {qw/INT=i/],
+    )
+    my @exportedSubs = keys %cmdLines;
 
-#you can use bash completion words here ("__directory__") to complete with directories
-# The default is filename completion
-my %additionalWordCompletions = (
-    SubCommandOne => {
-        DIRECTORY => [qw/__directory__/],
-        YES_OR_NO => [qw/yes no/],
-    },
-);
+    #you can use bash completion words here ("__directory__") to complete with directories
+    # The default is filename completion
+    my %additionalWordCompletions = (
+        SubCommandOne => {
+            DIRECTORY => [qw/__directory__/],
+            YES_OR_NO => [qw/yes no/],
+        },
+    );
 
-if ( defined $ARGV[0] )
-{
-    if ( defined( &{ $ARGV[0] } ) )
+    if ( defined $ARGV[0] )
     {
-        no strict 'refs';
-        my $subRef = shift @ARGV;
-        print join( "\n", &$subRef(@ARGV) ) . "\n" unless $subRef =~ /regAC/ ;
-        &$subRef($scriptName, \@exportedSubs, \%cmdLines, \%additionalWordCompletions) if $subRef =~ /regAC/ ;
-        exit 0;
+        if ( defined( &{ $ARGV[0] } ) )
+        {
+            no strict 'refs';
+            my $subRef = shift @ARGV;
+            print join( "\n", &$subRef(@ARGV) ) . "\n" unless $subRef =~ /regAC/ ;
+            &$subRef($scriptName, \@exportedSubs, \%cmdLines, \%additionalWordCompletions) if $subRef =~ /regAC/ ;
+            exit 0;
+        }
     }
-}
 
 
 Run from the commandline as:
 
-ScriptName regAC > /etc/bash_completion.d/ScriptName
-source /etc/bash_completion.d/ScriptName
+    ScriptName regAC > /etc/bash_completion.d/ScriptName
+    source /etc/bash_completion.d/ScriptName
 
 or 
 
-sudo ScriptName regAC
-source /etc/bash_completion.d/ScriptName
+    sudo ScriptName regAC
+    source /etc/bash_completion.d/ScriptName
 
 and the script should be registered with all the commands in:
 
-@Getopt::CommandLineExports::exportedSubs
+    @Getopt::CommandLineExports::exportedSubs
 
 and the command lines from:
 
-%Getopt::CommandLineExports::cmdLines
+    %Getopt::CommandLineExports::cmdLines
 
 =head2 parseArgs
 
 parse and argument list according to a command line spec in the Getopt::Long format.
 Returns a hash of arguments and values.
 
-%cmdLines = (
-    function   => [qw/ REQUIRED_ARGUMENT=s OPTIONAL_ARGUMENT_ONE=s OPTIONAL_ARGUMENT_TWO=s  /],
-);
+    %cmdLines = (
+        function   => [qw/ REQUIRED_ARGUMENT=s OPTIONAL_ARGUMENT_ONE=s OPTIONAL_ARGUMENT_TWO=s  /],
+    );
 
     my %h = (
         REQUIRED_ARGUMENT     => undef, # undef means the argument is required
@@ -214,9 +219,9 @@ The last argument is a reference to the argument spec in Getopt::Long format
 
 as an example:
 
-my %args = (ARG1 => "Default Value", ARG2 => undef);
+    my %args = (ARG1 => "Default Value", ARG2 => undef);
 
-parseArgsByPosition( ["One", "Two", "Three"], \%args, qw/ARG1=s ARG2=s ARG3=s ARG4=s/);
+    parseArgsByPosition( ["One", "Two", "Three"], \%args, qw/ARG1=s ARG2=s ARG3=s ARG4=s/);
 
 should set %args to be (ARG1 => "One", ARG2 => "Two", ARG3 => "Three")
 
@@ -241,7 +246,7 @@ BEGIN {
     use Exporter ();
     our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 # set the version for version checking
-    $VERSION = 1.00;
+    $VERSION = 0.02;
     @ISA = qw(Exporter);
     @EXPORT_OK = qw(&regAC &parseArgsByPosition &parseArgs &checkArgs);
     %EXPORT_TAGS = ( ALL => [ qw(&regAC &parseArgsByPosition &parseArgs &checkArgs) ], ); 
@@ -412,7 +417,7 @@ if (-w "/etc/bash_completion.d/$scriptName" or -w "/etc/bash_completion.d/")
     open my $fh, '>', "/etc/bash_completion.d/$scriptName"  or die "Can not open /etc/bash_completion.d/$scriptName for writing\n";
     print {$fh} $bashFunc;
     close $fh;
-    say qq(Remember to "source /etc/bash_completion.d/$scriptName" to update your shell);
+    print qq(Remember to "source /etc/bash_completion.d/$scriptName" to update your shell\n);
 } 
 else 
 {
@@ -549,15 +554,18 @@ L<http://cpanratings.perl.org/d/Getopt-CommandLineExports>
 
 L<http://search.cpan.org/dist/Getopt-CommandLineExports/>
 
-=back
+=item * Code Repository
 
+L<https://code.google.com/p/getopt-cle/>
+
+=back
 
 =head1 ACKNOWLEDGEMENTS
 
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011 Robert Haxton.
+Copyright 2008-2012 Robert Haxton.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
