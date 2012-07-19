@@ -12,11 +12,11 @@ Getopt::CommandLineExports - Allow suroutines within a script to export comand l
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -246,7 +246,7 @@ BEGIN {
     use Exporter ();
     our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 # set the version for version checking
-    $VERSION = 0.03;
+    $VERSION = 0.04;
     @ISA = qw(Exporter);
     @EXPORT_OK = qw(&regAC &parseArgsByPosition &parseArgs &checkArgs);
     %EXPORT_TAGS = ( ALL => [ qw(&regAC &parseArgsByPosition &parseArgs &checkArgs) ], ); 
@@ -459,8 +459,15 @@ sub parseArgs
     my $firstarg = shift;
     my @argvCopy = @{$firstarg};
 	# case CGI,  called via CGI return hash parsed by CGI.pm
-	return %{CGI->new()->Vars} if exists $ENV{GATEWAY_INTERFACE} and scalar(@argvCopy) == 0;
-		
+	if (exists $ENV{GATEWAY_INTERFACE} and scalar(@argvCopy) == 0)
+	{
+	    %args = %{CGI->new()->Vars};
+	    foreach (keys %args) 
+	    {
+	        $args{$_} = [split(/,|\x{00}/, $args{$_})] if scalar(split(/,|\x{00}/, $args{$_})) > 1;
+	    }
+	    return %args;
+	} 	
 	# case One, No arguments, just return
     return if (scalar(@argvCopy) == 0);
 	# case Two, the first and only argument is a reference to a hash
